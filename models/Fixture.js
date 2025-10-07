@@ -6,8 +6,6 @@ const fixtureSchema = new mongoose.Schema({
   homeTeam: String,
   awayTeam: String,
   leagueId: String,
-  homeLogo: String,
-  awayLogo: String,
-}, { timestamps: true });
+});
 
 export default mongoose.model("Fixture", fixtureSchema);

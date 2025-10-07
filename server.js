@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+
 import Fixture from "./models/Fixture.js";
 import Prediction from "./models/Prediction.js";
 import Click from "./models/Click.js";
@@ -14,57 +15,36 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Fix __dirname for ES Modules
+// ---------------- PATH SETUP ----------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Connect MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+// ---------------- DATABASE ----------------
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("✅ MongoDB connected"))
+.catch(err => console.error("❌ MongoDB error:", err));
 
-// Serve static frontend
+// ---------------- STATIC FILES ----------------
 app.use(express.static(path.join(__dirname, "public")));
 
-// =================== FIXTURES ===================
+// ---------------- FIXTURES ----------------
 app.get("/admin/fixtures", async (req, res) => {
   const fixtures = await Fixture.find().sort({ date: 1, time: 1 });
   res.json(fixtures);
 });
 
 app.post("/admin/fixture", async (req, res) => {
-  console.log("📥 Fixture POST:", req.body);
   const { _id, date, time, homeTeam, awayTeam, leagueId } = req.body;
-
-  try {
-    const homeLogo = `/logos/${homeTeam}.png`;
-    const awayLogo = `/logos/${awayTeam}.png`;
-
-    if (_id) {
-      const updated = await Fixture.findByIdAndUpdate(
-        _id,
-        { date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo },
-        { new: true }
-      );
-      return res.json(updated);
-    } else {
-      const fixture = new Fixture({
-        date,
-        time,
-        homeTeam,
-        awayTeam,
-        leagueId,
-        homeLogo,
-        awayLogo,
-      });
-      await fixture.save();
-      return res.json(fixture);
-    }
-  } catch (err) {
-    console.error("❌ Fixture save failed:", err);
-    res.status(500).json({ error: err.message });
+  if (_id) {
+    await Fixture.findByIdAndUpdate(_id, { date, time, homeTeam, awayTeam, leagueId });
+  } else {
+    const fixture = new Fixture({ date, time, homeTeam, awayTeam, leagueId });
+    await fixture.save();
   }
+  res.json({ success: true });
 });
 
 app.delete("/admin/fixture", async (req, res) => {
@@ -73,36 +53,21 @@ app.delete("/admin/fixture", async (req, res) => {
   res.json({ success: true });
 });
 
-// =================== PREDICTIONS ===================
+// ---------------- PREDICTIONS ----------------
 app.get("/admin/predictions", async (req, res) => {
-  const preds = await Prediction.find();
-  res.json(preds);
+  const predictions = await Prediction.find();
+  res.json(predictions);
 });
 
 app.post("/admin/prediction", async (req, res) => {
-  console.log("📥 Prediction POST:", req.body);
   const { _id, homeTeam, awayTeam } = req.body;
-
-  try {
-    const homeLogo = `/logos/${homeTeam}.png`;
-    const awayLogo = `/logos/${awayTeam}.png`;
-
-    if (_id) {
-      const updated = await Prediction.findByIdAndUpdate(
-        _id,
-        { homeTeam, awayTeam, homeLogo, awayLogo },
-        { new: true }
-      );
-      return res.json(updated);
-    } else {
-      const pred = new Prediction({ homeTeam, awayTeam, homeLogo, awayLogo });
-      await pred.save();
-      return res.json(pred);
-    }
-  } catch (err) {
-    console.error("❌ Prediction save failed:", err);
-    res.status(500).json({ error: err.message });
+  if (_id) {
+    await Prediction.findByIdAndUpdate(_id, { homeTeam, awayTeam });
+  } else {
+    const prediction = new Prediction({ homeTeam, awayTeam });
+    await prediction.save();
   }
+  res.json({ success: true });
 });
 
 app.delete("/admin/prediction", async (req, res) => {
@@ -111,25 +76,40 @@ app.delete("/admin/prediction", async (req, res) => {
   res.json({ success: true });
 });
 
-// =================== CLICK TRACKING ===================
-app.get("/admin/clicks", async (req, res) => {
-  let clicks = await Click.findOne();
-  if (!clicks) clicks = await Click.create({});
-  res.json(clicks);
-});
-
-app.post("/click/:type", async (req, res) => {
-  const { type } = req.params;
-  let clicks = await Click.findOne();
-  if (!clicks) clicks = await Click.create({});
-  if (type === "home") clicks.homepageClicks++;
-  if (type === "download") clicks.downloadClicks++;
+// ---------------- CLICK TRACKING ----------------
+app.post("/api/click/homepage", async (req, res) => {
+  const today = new Date().toISOString().split("T")[0];
+  let clicks = await Click.findOne({ date: today });
+  if (!clicks) clicks = new Click({ date: today });
+  clicks.homepageClicks += 1;
   await clicks.save();
-  res.json(clicks);
+  res.json({ success: true });
 });
 
-// =================== RUN SERVER ===================
+app.post("/api/click/download", async (req, res) => {
+  const today = new Date().toISOString().split("T")[0];
+  let clicks = await Click.findOne({ date: today });
+  if (!clicks) clicks = new Click({ date: today });
+  clicks.downloadClicks += 1;
+  await clicks.save();
+  res.json({ success: true });
+});
+
+app.get("/admin/clicks", async (req, res) => {
+  const today = new Date().toISOString().split("T")[0];
+  const clicks = await Click.findOne({ date: today });
+  res.json(clicks || { homepageClicks: 0, downloadClicks: 0 });
+});
+
+// ---------------- FRONTEND ROUTES ----------------
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ---------------- START SERVER ----------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`🌍 Server running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
