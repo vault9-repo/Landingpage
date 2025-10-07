@@ -1,150 +1,120 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import dotenv from "dotenv";
 import cron from "node-cron";
+import { v4 as uuidv4 } from "uuid";
+
+import Fixture from "./models/Fixture.js";
+import Prediction from "./models/Prediction.js";
+import Click from "./models/Click.js";
+import User from "./models/User.js";
 
 dotenv.config();
+const app = express();
+
+app.use(cors());
+app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+// Serve static files (frontend)
 app.use(express.static(path.join(__dirname, "public")));
 
-// ---------------- MongoDB ----------------
-const MONGO_URI = process.env.MONGO_URI;
+// ---------- MongoDB ----------
 mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.log("❌ MongoDB error:", err));
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
-// ---------------- Schemas ----------------
-const fixtureSchema = new mongoose.Schema({
-  date: String,
-  time: String,
-  homeTeam: String,
-  awayTeam: String,
-  leagueId: String,
-  homeLogo: String,
-  awayLogo: String,
-});
+// ---------- ROUTES ----------
 
-const predictionSchema = new mongoose.Schema({
-  homeTeam: String,
-  awayTeam: String,
-  homeLogo: String,
-  awayLogo: String,
-});
-
-const clickSchema = new mongoose.Schema({
-  userId: String,
-  date: String,
-  homepageClicks: { type: Number, default: 0 },
-  downloadClicks: { type: Number, default: 0 },
-});
-
-const Fixture = mongoose.model("Fixture", fixtureSchema);
-const Prediction = mongoose.model("Prediction", predictionSchema);
-const Click = mongoose.model("Click", clickSchema);
-
-// ---------------- Pages ----------------
+// Serve main & admin pages
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public/index.html")));
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "public/admin.html")));
 
-// ---------------- Admin APIs ----------------
-// Fixtures
-app.get("/admin/fixtures", async (req, res) => {
-  const fixtures = await Fixture.find();
-  res.json(fixtures);
-});
+// ----- Fixtures -----
+app.get("/admin/fixtures", async (req, res) => res.json(await Fixture.find()));
 
 app.post("/admin/fixture", async (req, res) => {
   const { _id, date, time, homeTeam, awayTeam, leagueId } = req.body;
   const homeLogo = `/logos/${homeTeam}.png`;
   const awayLogo = `/logos/${awayTeam}.png`;
+  const fixtureData = { date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo };
 
-  if (_id) {
-    const updated = await Fixture.findByIdAndUpdate(
-      _id,
-      { date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo },
-      { new: true }
-    );
-    return res.json(updated);
-  } else {
-    const newFixture = new Fixture({ date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo });
-    await newFixture.save();
-    return res.json(newFixture);
-  }
+  const fixture = _id
+    ? await Fixture.findByIdAndUpdate(_id, fixtureData, { new: true })
+    : await new Fixture(fixtureData).save();
+
+  res.json(fixture);
 });
 
 app.delete("/admin/fixture", async (req, res) => {
-  const { _id } = req.body;
-  await Fixture.findByIdAndDelete(_id);
+  await Fixture.findByIdAndDelete(req.body._id);
   res.json({ success: true });
 });
 
-// Predictions
-app.get("/admin/predictions", async (req, res) => {
-  const predictions = await Prediction.find();
-  res.json(predictions);
-});
+// ----- Predictions -----
+app.get("/admin/predictions", async (req, res) => res.json(await Prediction.find()));
 
 app.post("/admin/prediction", async (req, res) => {
   const { _id, homeTeam, awayTeam } = req.body;
   const homeLogo = `/logos/${homeTeam}.png`;
   const awayLogo = `/logos/${awayTeam}.png`;
+  const predData = { homeTeam, awayTeam, homeLogo, awayLogo };
 
-  if (_id) {
-    const updated = await Prediction.findByIdAndUpdate(
-      _id,
-      { homeTeam, awayTeam, homeLogo, awayLogo },
-      { new: true }
-    );
-    return res.json(updated);
-  } else {
-    const newPred = new Prediction({ homeTeam, awayTeam, homeLogo, awayLogo });
-    await newPred.save();
-    return res.json(newPred);
-  }
+  const prediction = _id
+    ? await Prediction.findByIdAndUpdate(_id, predData, { new: true })
+    : await new Prediction(predData).save();
+
+  res.json(prediction);
 });
 
 app.delete("/admin/prediction", async (req, res) => {
-  const { _id } = req.body;
-  await Prediction.findByIdAndDelete(_id);
+  await Prediction.findByIdAndDelete(req.body._id);
   res.json({ success: true });
 });
 
-// ---------------- Clicks ----------------
+// ----- User & Click Tracking -----
 app.post("/click", async (req, res) => {
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  const userId = ip.replace(/[^a-zA-Z0-9]/g, "");
-  const { type } = req.body;
-  const today = new Date().toISOString().split("T")[0];
+  try {
+    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const { type, userId } = req.body;
+    const today = new Date().toISOString().split("T")[0];
 
-  let click = await Click.findOne({ userId, date: today });
-  if (!click) {
-    click = new Click({
-      userId,
-      date: today,
-      homepageClicks: type === "homepage" ? 1 : 0,
-      downloadClicks: type === "download" ? 1 : 0,
-    });
+    let user = userId
+      ? await User.findOne({ userId })
+      : await new User({ userId: uuidv4(), ipAddress: ip }).save();
+
+    if (!user) user = await new User({ userId: uuidv4(), ipAddress: ip }).save();
+
+    const activeId = user.userId;
+
+    let click = await Click.findOne({ userId: activeId, date: today });
+    if (!click) {
+      click = new Click({
+        userId: activeId,
+        date: today,
+        homepageClicks: type === "homepage" ? 1 : 0,
+        downloadClicks: type === "download" ? 1 : 0,
+      });
+    } else {
+      if (type === "homepage" && click.homepageClicks === 0) click.homepageClicks = 1;
+      if (type === "download" && click.downloadClicks === 0) click.downloadClicks = 1;
+    }
+
     await click.save();
-    return res.json({ success: true, message: "New daily record created" });
+    res.json({ success: true, userId: activeId });
+  } catch (err) {
+    console.error("❌ Click tracking error:", err);
+    res.status(500).json({ success: false });
   }
-
-  if (type === "homepage" && click.homepageClicks === 0) click.homepageClicks = 1;
-  if (type === "download" && click.downloadClicks === 0) click.downloadClicks = 1;
-
-  await click.save();
-  res.json({ success: true, message: "Click recorded or already counted" });
 });
 
+// ----- Click Totals -----
 app.get("/admin/clicks", async (req, res) => {
   const today = new Date().toISOString().split("T")[0];
   const clicks = await Click.find({ date: today });
@@ -153,19 +123,15 @@ app.get("/admin/clicks", async (req, res) => {
   res.json({ homepageClicks, downloadClicks });
 });
 
-// ---------------- Daily Reset ----------------
+// ----- Daily Reset -----
 cron.schedule("0 0 * * *", async () => {
-  try {
-    await Click.deleteMany({});
-    console.log("🕛 Click data reset for new day");
-  } catch (err) {
-    console.error("❌ Error resetting click data:", err);
-  }
+  await Click.deleteMany({});
+  console.log("🕛 Click data reset for new day");
 });
 
-// ---------------- Fallback ----------------
+// Catch-all
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public/index.html")));
 
-// ---------------- Start Server ----------------
+// ---------- START SERVER ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

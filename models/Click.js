@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 const clickSchema = new mongoose.Schema({
   userId: String,
   date: String,
-  homepageClicked: { type: Boolean, default: false },
-  downloadClicked: { type: Boolean, default: false }
+  homepageClicks: { type: Number, default: 0 },
+  downloadClicks: { type: Number, default: 0 },
 });
 
 export default mongoose.model("Click", clickSchema);
