@@ -5,6 +5,6 @@ const predictionSchema = new mongoose.Schema({
   awayTeam: String,
   homeLogo: String,
   awayLogo: String,
-});
+}, { timestamps: true });
 
 export default mongoose.model("Prediction", predictionSchema);
