@@ -4,6 +4,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import cron from "node-cron";
 
 dotenv.config();
 
@@ -13,20 +14,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// ✅ Serve static files from the "public" folder (Landing Page + Admin)
 app.use(express.static(path.join(__dirname, "public")));
 
 // ---------------- MongoDB ----------------
 const MONGO_URI = process.env.MONGO_URI;
-
 mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.log("❌ MongoDB connection error:", err));
+  .catch((err) => console.log("❌ MongoDB error:", err));
 
 // ---------------- Schemas ----------------
 const fixtureSchema = new mongoose.Schema({
@@ -57,17 +52,11 @@ const Fixture = mongoose.model("Fixture", fixtureSchema);
 const Prediction = mongoose.model("Prediction", predictionSchema);
 const Click = mongoose.model("Click", clickSchema);
 
-// ---------------- Serve Pages ----------------
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
-});
-
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/admin.html"));
-});
+// ---------------- Pages ----------------
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public/index.html")));
+app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "public/admin.html")));
 
 // ---------------- Admin APIs ----------------
-
 // Fixtures
 app.get("/admin/fixtures", async (req, res) => {
   const fixtures = await Fixture.find();
@@ -76,7 +65,6 @@ app.get("/admin/fixtures", async (req, res) => {
 
 app.post("/admin/fixture", async (req, res) => {
   const { _id, date, time, homeTeam, awayTeam, leagueId } = req.body;
-
   const homeLogo = `/logos/${homeTeam}.png`;
   const awayLogo = `/logos/${awayTeam}.png`;
 
@@ -88,15 +76,7 @@ app.post("/admin/fixture", async (req, res) => {
     );
     return res.json(updated);
   } else {
-    const newFixture = new Fixture({
-      date,
-      time,
-      homeTeam,
-      awayTeam,
-      leagueId,
-      homeLogo,
-      awayLogo,
-    });
+    const newFixture = new Fixture({ date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo });
     await newFixture.save();
     return res.json(newFixture);
   }
@@ -127,12 +107,7 @@ app.post("/admin/prediction", async (req, res) => {
     );
     return res.json(updated);
   } else {
-    const newPred = new Prediction({
-      homeTeam,
-      awayTeam,
-      homeLogo,
-      awayLogo,
-    });
+    const newPred = new Prediction({ homeTeam, awayTeam, homeLogo, awayLogo });
     await newPred.save();
     return res.json(newPred);
   }
@@ -146,17 +121,28 @@ app.delete("/admin/prediction", async (req, res) => {
 
 // ---------------- Clicks ----------------
 app.post("/click", async (req, res) => {
-  const { userId, type } = req.body;
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const userId = ip.replace(/[^a-zA-Z0-9]/g, "");
+  const { type } = req.body;
   const today = new Date().toISOString().split("T")[0];
 
   let click = await Click.findOne({ userId, date: today });
-  if (!click) click = new Click({ userId, date: today });
+  if (!click) {
+    click = new Click({
+      userId,
+      date: today,
+      homepageClicks: type === "homepage" ? 1 : 0,
+      downloadClicks: type === "download" ? 1 : 0,
+    });
+    await click.save();
+    return res.json({ success: true, message: "New daily record created" });
+  }
 
-  if (type === "homepage") click.homepageClicks = 1;
-  if (type === "download") click.downloadClicks = 1;
+  if (type === "homepage" && click.homepageClicks === 0) click.homepageClicks = 1;
+  if (type === "download" && click.downloadClicks === 0) click.downloadClicks = 1;
 
   await click.save();
-  res.json({ success: true });
+  res.json({ success: true, message: "Click recorded or already counted" });
 });
 
 app.get("/admin/clicks", async (req, res) => {
@@ -167,10 +153,18 @@ app.get("/admin/clicks", async (req, res) => {
   res.json({ homepageClicks, downloadClicks });
 });
 
-// ---------------- Catch-all (Render routing support) ----------------
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+// ---------------- Daily Reset ----------------
+cron.schedule("0 0 * * *", async () => {
+  try {
+    await Click.deleteMany({});
+    console.log("🕛 Click data reset for new day");
+  } catch (err) {
+    console.error("❌ Error resetting click data:", err);
+  }
 });
+
+// ---------------- Fallback ----------------
+app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public/index.html")));
 
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 3000;
