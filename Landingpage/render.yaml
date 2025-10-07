@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: primepickstip
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false  # Add this manually in Render dashboard
+
+    runtime:
+      nodeVersion: 18

@@ -14,18 +14,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files
+// ✅ Serve static files from the "public" folder (Landing Page + Admin)
 app.use(express.static(path.join(__dirname, "public")));
 
 // ---------------- MongoDB ----------------
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.log("❌ MongoDB connection error:", err));
 
 // ---------------- Schemas ----------------
 const fixtureSchema = new mongoose.Schema({
@@ -56,7 +57,7 @@ const Fixture = mongoose.model("Fixture", fixtureSchema);
 const Prediction = mongoose.model("Prediction", predictionSchema);
 const Click = mongoose.model("Click", clickSchema);
 
-// ---------------- Serve HTML ----------------
+// ---------------- Serve Pages ----------------
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
 });
@@ -76,17 +77,26 @@ app.get("/admin/fixtures", async (req, res) => {
 app.post("/admin/fixture", async (req, res) => {
   const { _id, date, time, homeTeam, awayTeam, leagueId } = req.body;
 
-  // Build logo filenames based on team names
   const homeLogo = `/logos/${homeTeam}.png`;
   const awayLogo = `/logos/${awayTeam}.png`;
 
   if (_id) {
-    // Update
-    const updated = await Fixture.findByIdAndUpdate(_id, { date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo }, { new: true });
+    const updated = await Fixture.findByIdAndUpdate(
+      _id,
+      { date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo },
+      { new: true }
+    );
     return res.json(updated);
   } else {
-    // Create
-    const newFixture = new Fixture({ date, time, homeTeam, awayTeam, leagueId, homeLogo, awayLogo });
+    const newFixture = new Fixture({
+      date,
+      time,
+      homeTeam,
+      awayTeam,
+      leagueId,
+      homeLogo,
+      awayLogo,
+    });
     await newFixture.save();
     return res.json(newFixture);
   }
@@ -110,10 +120,19 @@ app.post("/admin/prediction", async (req, res) => {
   const awayLogo = `/logos/${awayTeam}.png`;
 
   if (_id) {
-    const updated = await Prediction.findByIdAndUpdate(_id, { homeTeam, awayTeam, homeLogo, awayLogo }, { new: true });
+    const updated = await Prediction.findByIdAndUpdate(
+      _id,
+      { homeTeam, awayTeam, homeLogo, awayLogo },
+      { new: true }
+    );
     return res.json(updated);
   } else {
-    const newPred = new Prediction({ homeTeam, awayTeam, homeLogo, awayLogo });
+    const newPred = new Prediction({
+      homeTeam,
+      awayTeam,
+      homeLogo,
+      awayLogo,
+    });
     await newPred.save();
     return res.json(newPred);
   }
@@ -128,12 +147,10 @@ app.delete("/admin/prediction", async (req, res) => {
 // ---------------- Clicks ----------------
 app.post("/click", async (req, res) => {
   const { userId, type } = req.body;
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0];
 
   let click = await Click.findOne({ userId, date: today });
-  if (!click) {
-    click = new Click({ userId, date: today });
-  }
+  if (!click) click = new Click({ userId, date: today });
 
   if (type === "homepage") click.homepageClicks = 1;
   if (type === "download") click.downloadClicks = 1;
@@ -150,6 +167,11 @@ app.get("/admin/clicks", async (req, res) => {
   res.json({ homepageClicks, downloadClicks });
 });
 
+// ---------------- Catch-all (Render routing support) ----------------
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
+
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
