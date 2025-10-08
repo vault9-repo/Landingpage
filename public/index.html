@@ -23,23 +23,55 @@
   }
 
   /* Floating Glassy Social Buttons */
-  .social-buttons { position: fixed; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
+  .social-buttons {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+  }
   .social-buttons a {
-    width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; color: #fff; font-size: 1.4rem; text-decoration: none;
-    backdrop-filter: blur(6px); background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.4rem;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: all 0.3s ease;
     box-shadow: 0 0 12px rgba(255,255,255,0.15);
   }
-  .social-buttons a:hover { transform: scale(1.1); background: rgba(255,255,255,0.15); }
+  .social-buttons a:hover {
+    transform: scale(1.1);
+    background: rgba(255,255,255,0.15);
+  }
   .facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
   .whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
   .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
   .gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
-  .social-buttons a span { display: none; }
-  .social-buttons a:hover span { display: inline-block; position: absolute; left: 60px; background: rgba(0,0,0,0.75); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; }
 
-  /* Hero and content */
+  .social-buttons a span {
+    display: none;
+  }
+  .social-buttons a:hover span {
+    display: inline-block;
+    position: absolute;
+    left: 60px;
+    background: rgba(0,0,0,0.75);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  /* Existing styles */
   .hero { text-align:center; padding:50px 20px 20px; }
   .hero h1 { font-size:3rem; font-weight:bold; }
   .hero p { font-size:1.2rem; margin:10px 0; }
@@ -54,14 +86,33 @@
   .match-info { flex:1; margin:0 10px; text-align:center; }
   .countdown { font-weight:bold; color:#0d6efd; }
   .predictions-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px; margin-bottom:2rem; }
-  .prediction-card { background: rgba(0,0,0,0.75); border-radius:10px; padding:10px; text-align:center; position:relative; transition: transform 0.3s; box-shadow: 0 0 15px rgba(0,255,0,0.3); }
-  .won-badge { position: absolute; top: 8px; right: 8px; background-color: #0d6efd; color: #fff; font-size: 0.75rem; font-weight: bold; padding: 3px 7px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .prediction-card {
+    background: rgba(0,0,0,0.75);
+    border-radius:10px;
+    padding:10px;
+    text-align:center;
+    position:relative;
+    transition: transform 0.3s;
+    box-shadow: 0 0 15px rgba(0,255,0,0.3); /* soft green glow */
+  }
+  .won-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #0d6efd;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 3px 7px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
   footer { text-align:center; padding:20px; background:rgba(0,0,0,0.8); }
 </style>
 </head>
 <body>
 
-<!-- Floating Social Buttons -->
+<!-- ✅ Floating Social Buttons -->
 <div class="social-buttons">
   <a href="#" target="_blank" class="facebook"><i class="bi bi-facebook"></i><span>Facebook</span></a>
   <a href="#" target="_blank" class="whatsapp"><i class="bi bi-whatsapp"></i><span>WhatsApp</span></a>
@@ -81,7 +132,10 @@
   <p style="font-size:1.2rem; font-weight:bold; color:#ffd700;">
     Download our app to access <span style="color:#0d6efd;">Experts Free & Premium Surebets</span> instantly!
   </p>
-  <button id="downloadButton" class="btn btn-success">Download APK Now</button>
+  <a href="https://median.co/share/rdejjdb#apk" target="_blank" class="btn btn-success" id="downloadBtn">
+    Download APK Now
+  </a>
+  <button id="homepageBtn" class="btn btn-primary mt-2">Homepage</button>
   <p style="font-size:0.9rem; margin-top:5px;">Install on your device to unlock all predictions and live tips.</p>
 </section>
 
@@ -95,6 +149,11 @@
 
   <h4>Top Predictions</h4>
   <div class="predictions-grid" id="predictionsContainer"></div>
+
+  <h4>Click Counts</h4>
+  <p>Homepage clicks: <span id="homepageClicks">0</span></p>
+  <p>Download clicks: <span id="downloadClicks">0</span></p>
+  <button id="refreshClicks" class="btn btn-info">Refresh</button>
 </div>
 
 <footer>
@@ -105,16 +164,21 @@
 <script>
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
+const homepageBtn = document.getElementById("homepageBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const homepageClicks = document.getElementById("homepageClicks");
+const downloadClicks = document.getElementById("downloadClicks");
+const refreshClicks = document.getElementById("refreshClicks");
 
-// ---------------- Persist userId ----------------
-let userId = localStorage.getItem('ppUserId');
+// Generate a unique user ID per device/session
+let userId = localStorage.getItem("userId");
 if (!userId) {
   userId = crypto.randomUUID();
-  localStorage.setItem('ppUserId', userId);
+  localStorage.setItem("userId", userId);
 }
 
-// ---------------- Team logos ----------------
-const teamLogos = {};
+// TEAM LOGOS
+const teamLogos = {}; 
 function getTeamLogo(teamName){
   if(!teamLogos[teamName]){
     teamLogos[teamName] = `/logos/${teamName}.png`;
@@ -122,7 +186,7 @@ function getTeamLogo(teamName){
   return teamLogos[teamName];
 }
 
-// ---------------- Countdown ----------------
+// COUNTDOWN
 function getCountdown(date){
   const matchTime = new Date(date);
   const now = new Date();
@@ -134,7 +198,7 @@ function getCountdown(date){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// ---------------- Fetch matches ----------------
+// FETCH MATCHES
 async function fetchMatches(){
   const res = await fetch("/admin/fixtures");
   const data = await res.json();
@@ -156,7 +220,7 @@ async function fetchMatches(){
   });
 }
 
-// ---------------- Fetch predictions ----------------
+// FETCH PREDICTIONS
 async function fetchPredictions(){
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -175,25 +239,48 @@ async function fetchPredictions(){
   });
 }
 
-// ---------------- Track clicks ----------------
+// CLICK TRACKING
 async function trackClick(type){
-  try{
+  try {
     const res = await fetch("/api/clicks", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({ userId, type })
     });
     const data = await res.json();
-    console.log(type, 'click count:', data.count);
-  } catch(err){ console.error(err); }
+    updateClicksDisplay(type, data.count);
+  } catch(err) {
+    console.error("Click tracking error:", err);
+  }
 }
 
-// Attach click event
-document.getElementById('downloadButton').addEventListener('click', ()=> trackClick('download'));
+function updateClicksDisplay(type, count){
+  if(type==="homepage") homepageClicks.innerText = count;
+  else if(type==="download") downloadClicks.innerText = count;
+}
 
-// ---------------- Initial load ----------------
+async function fetchClicks(){
+  try {
+    const [homeRes, downloadRes] = await Promise.all([
+      fetch("/api/clicks?type=homepage").then(r=>r.json()),
+      fetch("/api/clicks?type=download").then(r=>r.json())
+    ]);
+    homepageClicks.innerText = homeRes.count;
+    downloadClicks.innerText = downloadRes.count;
+  } catch(err){
+    console.error("Fetch clicks error:", err);
+  }
+}
+
+// EVENT LISTENERS
+homepageBtn.addEventListener("click", ()=> trackClick("homepage"));
+downloadBtn.addEventListener("click", ()=> trackClick("download"));
+refreshClicks.addEventListener("click", fetchClicks);
+
+// INITIAL LOAD
 fetchMatches();
 fetchPredictions();
+fetchClicks();
 setInterval(fetchMatches, 60000);
 setInterval(fetchPredictions, 60000);
 setInterval(()=>{
@@ -210,8 +297,8 @@ setInterval(()=>{
     }
   });
 },1000);
-</script>
 
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
