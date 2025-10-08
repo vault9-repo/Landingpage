@@ -6,7 +6,6 @@
 <title>PrimePicks Soccer Tips</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
 <style>
   body {
     background: url('BACKGROUND.jpg') no-repeat center center fixed;
@@ -22,65 +21,58 @@
     z-index: -1;
   }
 
- /* Floating Glassy Social Buttons */
-.social-buttons {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1000;
-}
+  /* Floating Glassy Social Buttons */
+  .social-buttons {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+  }
+  .social-buttons a {
+    width: 45px; height: 45px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.4rem;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 12px rgba(255,255,255,0.15);
+  }
+  .social-buttons a:hover {
+    transform: scale(1.1);
+    background: rgba(255,255,255,0.15);
+  }
+  .facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
+  .whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
+  .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
+  .gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
+  .social-buttons a span { display: none; }
+  .social-buttons a:hover span {
+    display: inline-block;
+    position: absolute;
+    left: 60px;
+    background: rgba(0,0,0,0.75);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
 
-.social-buttons a {
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 1.4rem;
-  text-decoration: none;
-  backdrop-filter: blur(6px);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  transition: all 0.3s ease;
-  box-shadow: 0 0 12px rgba(255,255,255,0.15);
-}
-
-.social-buttons a:hover {
-  transform: scale(1.1);
-  background: rgba(255,255,255,0.15);
-}
-
-.facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
-.whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
-.telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
-.gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
-
-.social-buttons a span {
-  display: none;
-}
-.social-buttons a:hover span {
-  display: inline-block;
-  position: absolute;
-  left: 60px;
-  background: rgba(0,0,0,0.75);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-  /* Existing styles */
-  .hero { text-align:center; padding:50px 20px 20px; }
+  /* Hero & CTA */
+  .hero { text-align:center; padding:50px 20px 20px; cursor:pointer; }
   .hero h1 { font-size:3rem; font-weight:bold; }
   .hero p { font-size:1.2rem; margin:10px 0; }
   .btn-success { font-size:1.3rem; padding:15px 40px; margin-top:10px; transition: all 0.3s; }
   .btn-success:hover { transform: scale(1.05); box-shadow: 0 0 15px #28a745; }
   .center-logo img { max-width:150px; width:100%; height:auto; border-radius:50%; box-shadow:0 8px 25px rgba(0,0,0,0.4); margin:2rem auto; display:block; }
+  
+  /* Dashboard & Matches */
   .dashboard { display:flex; flex-wrap:wrap; gap:20px; margin-bottom:2rem; }
   .upcoming-matches { flex:1; min-width:300px; max-height:600px; overflow-y:auto; }
   .match-card { background: rgba(0,0,0,0.75); border-radius:12px; padding:15px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; transition:transform 0.2s; }
@@ -96,7 +88,7 @@
     text-align:center;
     position:relative;
     transition: transform 0.3s;
-    box-shadow: 0 0 15px rgba(0,255,0,0.3); /* soft green glow */
+    box-shadow: 0 0 15px rgba(0,255,0,0.3);
   }
   .won-badge {
     position: absolute;
@@ -115,7 +107,7 @@
 </head>
 <body>
 
-<!-- ✅ Floating Social Buttons -->
+<!-- Floating Social Buttons -->
 <div class="social-buttons">
   <a href="#" target="_blank" class="facebook"><i class="bi bi-facebook"></i><span>Facebook</span></a>
   <a href="#" target="_blank" class="whatsapp"><i class="bi bi-whatsapp"></i><span>WhatsApp</span></a>
@@ -123,7 +115,8 @@
   <a href="#" target="_blank" class="gmail"><i class="bi bi-envelope-fill"></i><span>Gmail</span></a>
 </div>
 
-<section class="hero">
+<!-- Hero Section triggers homepage click -->
+<section class="hero" id="homepageClick">
   <h1>PrimePicks Soccer Tips</h1>
   <p>Accurate Live Soccer Predictions, Daily Matches, and Scores</p>
   <div class="center-logo">
@@ -131,6 +124,7 @@
   </div>
 </section>
 
+<!-- CTA Download -->
 <section class="hero-cta text-center mb-4">
   <p style="font-size:1.2rem; font-weight:bold; color:#ffd700;">
     Download our app to access <span style="color:#0d6efd;">Experts Free & Premium Surebets</span> instantly!
@@ -141,6 +135,7 @@
   <p style="font-size:0.9rem; margin-top:5px;">Install on your device to unlock all predictions and live tips.</p>
 </section>
 
+<!-- Matches & Predictions -->
 <div class="container">
   <div class="dashboard">
     <div class="upcoming-matches">
@@ -162,8 +157,9 @@
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
 const downloadBtn = document.getElementById('downloadBtn');
+const homepageClick = document.getElementById('homepageClick');
 
-const teamLogos = {}; 
+const teamLogos = {};
 function getTeamLogo(teamName){
   if(!teamLogos[teamName]){
     teamLogos[teamName] = `/logos/${teamName}.png`;
@@ -182,6 +178,7 @@ function getCountdown(date){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
+// Fetch Matches
 async function fetchMatches(){
   const res = await fetch("/admin/fixtures");
   const data = await res.json();
@@ -203,6 +200,7 @@ async function fetchMatches(){
   });
 }
 
+// Fetch Predictions
 async function fetchPredictions(){
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -221,45 +219,25 @@ async function fetchPredictions(){
   });
 }
 
-// ✅ Homepage and download clicks logic
-function getUserId() {
-  let id = localStorage.getItem('userId');
-  if(!id){
-    id = crypto.randomUUID();
-    localStorage.setItem('userId', id);
-  }
-  return id;
+// Click tracking logic
+async function sendClick(type){
+  const userId = localStorage.getItem("userId") || crypto.randomUUID();
+  localStorage.setItem("userId", userId);
+
+  try{
+    await fetch("/api/clicks", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({userId, type})
+    });
+  }catch(err){ console.error(err); }
 }
 
-function sendClick(type){
-  const userId = getUserId();
-  fetch('/api/clicks', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({userId, type})
-  })
-  .then(res => res.json())
-  .then(data => console.log(`${type} clicks:`, data.count))
-  .catch(err => console.error(err));
-}
+// Bind clicks
+downloadBtn?.addEventListener("click", ()=>sendClick("download"));
+homepageClick?.addEventListener("click", ()=>sendClick("homepage"));
 
-// Attach to homepage clicks
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Example: track homepage click anywhere you want
-  document.body.addEventListener('click', (e)=>{
-    if(e.target.closest('#homepageTrack')){ // add id="homepageTrack" to homepage button if exists
-      sendClick('homepage');
-    }
-  });
-
-  // Download button click
-  downloadBtn.addEventListener('click', ()=>sendClick('download'));
-});
-
-fetchMatches();
-fetchPredictions();
-setInterval(fetchMatches, 60000);
-setInterval(fetchPredictions, 60000);
+// Auto-refresh countdown
 setInterval(()=>{
   document.querySelectorAll('.countdown').forEach(el=>{
     const parent = el.closest('.match-card');
@@ -274,6 +252,12 @@ setInterval(()=>{
     }
   });
 },1000);
+
+// Initial fetch
+fetchMatches();
+fetchPredictions();
+setInterval(fetchMatches, 60000);
+setInterval(fetchPredictions, 60000);
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
