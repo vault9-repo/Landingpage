@@ -22,57 +22,57 @@
     z-index: -1;
   }
 
-  /* Floating Social Buttons */
-  .social-buttons {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 1000;
-  }
+ /* Floating Glassy Social Buttons */
+.social-buttons {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+}
 
-  .social-buttons a {
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 1.4rem;
-    text-decoration: none;
-    backdrop-filter: blur(6px);
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    transition: all 0.3s ease;
-    box-shadow: 0 0 12px rgba(255,255,255,0.15);
-  }
+.social-buttons a {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.4rem;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 12px rgba(255,255,255,0.15);
+}
 
-  .social-buttons a:hover {
-    transform: scale(1.1);
-    background: rgba(255,255,255,0.15);
-  }
+.social-buttons a:hover {
+  transform: scale(1.1);
+  background: rgba(255,255,255,0.15);
+}
 
-  .facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
-  .whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
-  .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
-  .gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
+.facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
+.whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
+.telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
+.gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
 
-  .social-buttons a span {
-    display: none;
-  }
-  .social-buttons a:hover span {
-    display: inline-block;
-    position: absolute;
-    left: 60px;
-    background: rgba(0,0,0,0.75);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-  }
+.social-buttons a span {
+  display: none;
+}
+.social-buttons a:hover span {
+  display: inline-block;
+  position: absolute;
+  left: 60px;
+  background: rgba(0,0,0,0.75);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
 
   /* Existing styles */
   .hero { text-align:center; padding:50px 20px 20px; }
@@ -96,7 +96,7 @@
     text-align:center;
     position:relative;
     transition: transform 0.3s;
-    box-shadow: 0 0 15px rgba(0,255,0,0.3);
+    box-shadow: 0 0 15px rgba(0,255,0,0.3); /* soft green glow */
   }
   .won-badge {
     position: absolute;
@@ -115,7 +115,7 @@
 </head>
 <body>
 
-<!-- Floating Social Buttons -->
+<!-- ✅ Floating Social Buttons -->
 <div class="social-buttons">
   <a href="#" target="_blank" class="facebook"><i class="bi bi-facebook"></i><span>Facebook</span></a>
   <a href="#" target="_blank" class="whatsapp"><i class="bi bi-whatsapp"></i><span>WhatsApp</span></a>
@@ -135,7 +135,7 @@
   <p style="font-size:1.2rem; font-weight:bold; color:#ffd700;">
     Download our app to access <span style="color:#0d6efd;">Experts Free & Premium Surebets</span> instantly!
   </p>
-  <a href="https://median.co/share/rdejjdb#apk" target="_blank" class="btn btn-success" id="downloadBtn">
+  <a href="https://median.co/share/rdejjdb#apk" target="_blank" id="downloadBtn" class="btn btn-success">
     Download APK Now
   </a>
   <p style="font-size:0.9rem; margin-top:5px;">Install on your device to unlock all predictions and live tips.</p>
@@ -161,8 +161,8 @@
 <script>
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
-const downloadBtn = document.getElementById('downloadBtn');
 
+// ---------------- TEAM LOGOS -----------------
 const teamLogos = {}; 
 function getTeamLogo(teamName){
   if(!teamLogos[teamName]){
@@ -171,6 +171,7 @@ function getTeamLogo(teamName){
   return teamLogos[teamName];
 }
 
+// ---------------- COUNTDOWN -----------------
 function getCountdown(date){
   const matchTime = new Date(date);
   const now = new Date();
@@ -182,6 +183,7 @@ function getCountdown(date){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
+// ---------------- FETCH MATCHES -----------------
 async function fetchMatches(){
   const res = await fetch("/admin/fixtures");
   const data = await res.json();
@@ -203,6 +205,7 @@ async function fetchMatches(){
   });
 }
 
+// ---------------- FETCH PREDICTIONS -----------------
 async function fetchPredictions(){
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -221,11 +224,44 @@ async function fetchPredictions(){
   });
 }
 
+// ---------------- CLICK TRACKING -----------------
+window.addEventListener('load', async ()=>{
+  try{
+    const userId = localStorage.getItem('pp_user_id') || crypto.randomUUID();
+    localStorage.setItem('pp_user_id', userId);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // HOMEPAGE CLICK (once per day)
+    const lastHomeClick = localStorage.getItem('pp_home_click_date');
+    if(lastHomeClick !== today){
+      await fetch('/api/clicks', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'homepage', userId })
+      });
+      localStorage.setItem('pp_home_click_date', today);
+    }
+
+    // DOWNLOAD BUTTON CLICK
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.addEventListener('click', async ()=>{
+      await fetch('/api/clicks', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'download', userId })
+      });
+    });
+
+  }catch(e){ console.error(e); }
+});
+
+// ---------------- INITIAL FETCH -----------------
 fetchMatches();
 fetchPredictions();
 setInterval(fetchMatches, 60000);
 setInterval(fetchPredictions, 60000);
-setInterval(()=> {
+setInterval(()=>{
   document.querySelectorAll('.countdown').forEach(el=>{
     const parent = el.closest('.match-card');
     if(!parent) return;
@@ -239,28 +275,6 @@ setInterval(()=> {
     }
   });
 },1000);
-
-// ------------------- TRACK CLICKS -------------------
-async function trackClick(type){
-  try{
-    const userId = localStorage.getItem('pp_user_id') || crypto.randomUUID();
-    localStorage.setItem('pp_user_id', userId);
-    await fetch('/api/clicks', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ type, userId })
-    });
-  } catch(e){
-    console.error(e);
-  }
-}
-
-downloadBtn.addEventListener('click', ()=>trackClick('download'));
-
-// Track homepage clicks (optional, e.g., entire page click)
-document.body.addEventListener('click', (e)=>{
-  if(!e.target.closest('#downloadBtn') && !e.target.closest('.social-buttons')) trackClick('homepage');
-});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
