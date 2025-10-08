@@ -12,7 +12,6 @@
 </style>
 </head>
 <body>
-
 <h2>Admin Panel</h2>
 <ul class="nav nav-tabs mb-3">
   <li class="nav-item"><a class="nav-link active" id="tab-upcoming" href="#">Upcoming Matches</a></li>
@@ -20,6 +19,7 @@
   <li class="nav-item"><a class="nav-link" id="tab-clicks" href="#">Clicks</a></li>
 </ul>
 
+<!-- Upcoming Matches -->
 <div id="upcomingSection">
   <h4>Upcoming Matches</h4>
   <form id="addMatchForm" class="mb-3">
@@ -33,6 +33,7 @@
   <div id="matchesContainer"></div>
 </div>
 
+<!-- Predictions -->
 <div id="predictionSection" style="display:none;">
   <h4>Top Predictions</h4>
   <form id="addPredictionForm" class="mb-3">
@@ -43,6 +44,7 @@
   <div id="predictionsContainer"></div>
 </div>
 
+<!-- Clicks -->
 <div id="clickSection" style="display:none;">
   <h4>Today’s Clicks</h4>
   <p>Homepage clicks: <span id="homepageClicks">0</span></p>
@@ -51,7 +53,7 @@
 </div>
 
 <script>
-// Tab toggling
+// Tabs toggling
 const tabUpcoming = document.getElementById("tab-upcoming");
 const tabPredictions = document.getElementById("tab-predictions");
 const tabClicks = document.getElementById("tab-clicks");
@@ -59,35 +61,9 @@ const upcomingSection = document.getElementById("upcomingSection");
 const predictionSection = document.getElementById("predictionSection");
 const clickSection = document.getElementById("clickSection");
 
-tabUpcoming.addEventListener("click",()=>{
-  upcomingSection.style.display="block"; 
-  predictionSection.style.display="none"; 
-  clickSection.style.display="none"; 
-  tabUpcoming.classList.add("active"); 
-  tabPredictions.classList.remove("active"); 
-  tabClicks.classList.remove("active"); 
-  loadMatches();
-});
-
-tabPredictions.addEventListener("click",()=>{
-  upcomingSection.style.display="none"; 
-  predictionSection.style.display="block"; 
-  clickSection.style.display="none"; 
-  tabUpcoming.classList.remove("active"); 
-  tabPredictions.classList.add("active"); 
-  tabClicks.classList.remove("active"); 
-  loadPredictions();
-});
-
-tabClicks.addEventListener("click",()=>{
-  upcomingSection.style.display="none"; 
-  predictionSection.style.display="none"; 
-  clickSection.style.display="block"; 
-  tabUpcoming.classList.remove("active"); 
-  tabPredictions.classList.remove("active"); 
-  tabClicks.classList.add("active"); 
-  loadClicks();
-});
+tabUpcoming.addEventListener("click",()=>{ upcomingSection.style.display="block"; predictionSection.style.display="none"; clickSection.style.display="none"; tabUpcoming.classList.add("active"); tabPredictions.classList.remove("active"); tabClicks.classList.remove("active"); loadMatches(); });
+tabPredictions.addEventListener("click",()=>{ upcomingSection.style.display="none"; predictionSection.style.display="block"; clickSection.style.display="none"; tabUpcoming.classList.remove("active"); tabPredictions.classList.add("active"); tabClicks.classList.remove("active"); loadPredictions(); });
+tabClicks.addEventListener("click",()=>{ upcomingSection.style.display="none"; predictionSection.style.display="none"; clickSection.style.display="block"; tabUpcoming.classList.remove("active"); tabPredictions.classList.remove("active"); tabClicks.classList.add("active"); loadClicks(); });
 
 // ---------------- MATCHES ----------------
 const matchesContainer = document.getElementById("matchesContainer");
@@ -192,10 +168,12 @@ const refreshClicks = document.getElementById("refreshClicks");
 
 async function loadClicks(){
   try {
-    const res = await fetch("/api/clicks/summary"); // <- working like download
+    const res = await fetch("/api/clicks");
     const data = await res.json();
-    homepageClicks.innerText = data.homepage || 0;
-    downloadClicks.innerText = data.download || 0;
+    const homepage = data.filter(c => c.type === "homepage").length;
+    const download = data.filter(c => c.type === "download").length;
+    homepageClicks.innerText = homepage;
+    downloadClicks.innerText = download;
   } catch(err){
     console.error("Error fetching clicks:", err);
     homepageClicks.innerText = "Error";
