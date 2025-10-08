@@ -22,7 +22,7 @@
     z-index: -1;
   }
 
-  /* Floating Glassy Social Buttons */
+  /* Floating Social Buttons */
   .social-buttons {
     position: fixed;
     top: 20px;
@@ -32,6 +32,7 @@
     gap: 12px;
     z-index: 1000;
   }
+
   .social-buttons a {
     width: 45px;
     height: 45px;
@@ -48,10 +49,12 @@
     transition: all 0.3s ease;
     box-shadow: 0 0 12px rgba(255,255,255,0.15);
   }
+
   .social-buttons a:hover {
     transform: scale(1.1);
     background: rgba(255,255,255,0.15);
   }
+
   .facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
   .whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
   .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
@@ -93,7 +96,7 @@
     text-align:center;
     position:relative;
     transition: transform 0.3s;
-    box-shadow: 0 0 15px rgba(0,255,0,0.3); /* soft green glow */
+    box-shadow: 0 0 15px rgba(0,255,0,0.3);
   }
   .won-badge {
     position: absolute;
@@ -112,7 +115,7 @@
 </head>
 <body>
 
-<!-- ✅ Floating Social Buttons -->
+<!-- Floating Social Buttons -->
 <div class="social-buttons">
   <a href="#" target="_blank" class="facebook"><i class="bi bi-facebook"></i><span>Facebook</span></a>
   <a href="#" target="_blank" class="whatsapp"><i class="bi bi-whatsapp"></i><span>WhatsApp</span></a>
@@ -135,7 +138,6 @@
   <a href="https://median.co/share/rdejjdb#apk" target="_blank" class="btn btn-success" id="downloadBtn">
     Download APK Now
   </a>
-  <button id="homepageBtn" class="btn btn-primary mt-2">Homepage</button>
   <p style="font-size:0.9rem; margin-top:5px;">Install on your device to unlock all predictions and live tips.</p>
 </section>
 
@@ -149,11 +151,6 @@
 
   <h4>Top Predictions</h4>
   <div class="predictions-grid" id="predictionsContainer"></div>
-
-  <h4>Click Counts</h4>
-  <p>Homepage clicks: <span id="homepageClicks">0</span></p>
-  <p>Download clicks: <span id="downloadClicks">0</span></p>
-  <button id="refreshClicks" class="btn btn-info">Refresh</button>
 </div>
 
 <footer>
@@ -164,20 +161,8 @@
 <script>
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
-const homepageBtn = document.getElementById("homepageBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const homepageClicks = document.getElementById("homepageClicks");
-const downloadClicks = document.getElementById("downloadClicks");
-const refreshClicks = document.getElementById("refreshClicks");
+const downloadBtn = document.getElementById('downloadBtn');
 
-// Generate a unique user ID per device/session
-let userId = localStorage.getItem("userId");
-if (!userId) {
-  userId = crypto.randomUUID();
-  localStorage.setItem("userId", userId);
-}
-
-// TEAM LOGOS
 const teamLogos = {}; 
 function getTeamLogo(teamName){
   if(!teamLogos[teamName]){
@@ -186,7 +171,6 @@ function getTeamLogo(teamName){
   return teamLogos[teamName];
 }
 
-// COUNTDOWN
 function getCountdown(date){
   const matchTime = new Date(date);
   const now = new Date();
@@ -198,7 +182,6 @@ function getCountdown(date){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// FETCH MATCHES
 async function fetchMatches(){
   const res = await fetch("/admin/fixtures");
   const data = await res.json();
@@ -220,7 +203,6 @@ async function fetchMatches(){
   });
 }
 
-// FETCH PREDICTIONS
 async function fetchPredictions(){
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -239,51 +221,11 @@ async function fetchPredictions(){
   });
 }
 
-// CLICK TRACKING
-async function trackClick(type){
-  try {
-    const res = await fetch("/api/clicks", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ userId, type })
-    });
-    const data = await res.json();
-    updateClicksDisplay(type, data.count);
-  } catch(err) {
-    console.error("Click tracking error:", err);
-  }
-}
-
-function updateClicksDisplay(type, count){
-  if(type==="homepage") homepageClicks.innerText = count;
-  else if(type==="download") downloadClicks.innerText = count;
-}
-
-async function fetchClicks(){
-  try {
-    const [homeRes, downloadRes] = await Promise.all([
-      fetch("/api/clicks?type=homepage").then(r=>r.json()),
-      fetch("/api/clicks?type=download").then(r=>r.json())
-    ]);
-    homepageClicks.innerText = homeRes.count;
-    downloadClicks.innerText = downloadRes.count;
-  } catch(err){
-    console.error("Fetch clicks error:", err);
-  }
-}
-
-// EVENT LISTENERS
-homepageBtn.addEventListener("click", ()=> trackClick("homepage"));
-downloadBtn.addEventListener("click", ()=> trackClick("download"));
-refreshClicks.addEventListener("click", fetchClicks);
-
-// INITIAL LOAD
 fetchMatches();
 fetchPredictions();
-fetchClicks();
 setInterval(fetchMatches, 60000);
 setInterval(fetchPredictions, 60000);
-setInterval(()=>{
+setInterval(()=> {
   document.querySelectorAll('.countdown').forEach(el=>{
     const parent = el.closest('.match-card');
     if(!parent) return;
@@ -298,7 +240,29 @@ setInterval(()=>{
   });
 },1000);
 
+// ------------------- TRACK CLICKS -------------------
+async function trackClick(type){
+  try{
+    const userId = localStorage.getItem('pp_user_id') || crypto.randomUUID();
+    localStorage.setItem('pp_user_id', userId);
+    await fetch('/api/clicks', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ type, userId })
+    });
+  } catch(e){
+    console.error(e);
+  }
+}
+
+downloadBtn.addEventListener('click', ()=>trackClick('download'));
+
+// Track homepage clicks (optional, e.g., entire page click)
+document.body.addEventListener('click', (e)=>{
+  if(!e.target.closest('#downloadBtn') && !e.target.closest('.social-buttons')) trackClick('homepage');
+});
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
