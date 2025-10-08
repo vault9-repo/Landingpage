@@ -1,5 +1,6 @@
 import express from "express";
-import Click from "../models/Click.js"; // your click model
+import Click from "../models/Click.js";
+
 const router = express.Router();
 
 // Track a click
@@ -12,7 +13,7 @@ router.post("/", async (req, res) => {
     let click = await Click.findOne({ type, date: today });
 
     if (!click) {
-      // No document for today, create it with this user
+      // No document for today, create it
       click = new Click({
         type,
         date: today,
@@ -21,19 +22,17 @@ router.post("/", async (req, res) => {
       });
       await click.save();
     } else {
-      // Check if user already clicked today
+      // Only add if user hasn't clicked yet
       if (!click.users.includes(userId)) {
         click.users.push(userId);
         click.count += 1;
         await click.save();
-      } else {
-        // user already clicked today, do nothing
-      }
+      } // else: do nothing, user already clicked today
     }
 
     res.json({ success: true, count: click.count });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -50,7 +49,7 @@ router.get("/", async (req, res) => {
       downloadClicks: downloadClick ? downloadClick.count : 0
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ homepageClicks: 0, downloadClicks: 0 });
   }
 });
