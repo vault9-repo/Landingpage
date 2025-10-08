@@ -9,15 +9,16 @@ router.post("/", async (req, res) => {
     const { userId, type } = req.body;
     const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
 
+    // Find or create today's document for this type
     let clickDoc = await Click.findOne({ type, date: today });
 
     if (!clickDoc) {
-      // Create new document for today if doesn't exist
       clickDoc = new Click({ type, date: today, users: [] });
     }
 
+    // Only count if user hasn't clicked yet
     if (!clickDoc.users.includes(userId)) {
-      clickDoc.users.push(userId); // only count if user hasn't clicked yet
+      clickDoc.users.push(userId);
       await clickDoc.save();
     }
 
