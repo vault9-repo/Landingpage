@@ -23,26 +23,12 @@
   }
 
   /* Floating Glassy Social Buttons */
-  .social-buttons {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 1000;
-  }
+  .social-buttons { position: fixed; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
   .social-buttons a {
-    width: 45px; height: 45px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 1.4rem;
-    text-decoration: none;
-    backdrop-filter: blur(6px);
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    transition: all 0.3s ease;
+    width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; color: #fff; font-size: 1.4rem; text-decoration: none;
+    backdrop-filter: blur(6px); background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease;
     box-shadow: 0 0 12px rgba(255,255,255,0.15);
   }
   .social-buttons a:hover { transform: scale(1.1); background: rgba(255,255,255,0.15); }
@@ -51,17 +37,9 @@
   .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
   .gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
   .social-buttons a span { display: none; }
-  .social-buttons a:hover span {
-    display: inline-block;
-    position: absolute;
-    left: 60px;
-    background: rgba(0,0,0,0.75);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-  }
+  .social-buttons a:hover span { display: inline-block; position: absolute; left: 60px; background: rgba(0,0,0,0.75); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; }
 
+  /* Hero and content */
   .hero { text-align:center; padding:50px 20px 20px; }
   .hero h1 { font-size:3rem; font-weight:bold; }
   .hero p { font-size:1.2rem; margin:10px 0; }
@@ -83,7 +61,7 @@
 </head>
 <body>
 
-<!-- ✅ Floating Social Buttons -->
+<!-- Floating Social Buttons -->
 <div class="social-buttons">
   <a href="#" target="_blank" class="facebook"><i class="bi bi-facebook"></i><span>Facebook</span></a>
   <a href="#" target="_blank" class="whatsapp"><i class="bi bi-whatsapp"></i><span>WhatsApp</span></a>
@@ -103,9 +81,7 @@
   <p style="font-size:1.2rem; font-weight:bold; color:#ffd700;">
     Download our app to access <span style="color:#0d6efd;">Experts Free & Premium Surebets</span> instantly!
   </p>
-  <a id="downloadBtn" href="https://median.co/share/rdejjdb#apk" target="_blank" class="btn btn-success">
-    Download APK Now
-  </a>
+  <button id="downloadButton" class="btn btn-success">Download APK Now</button>
   <p style="font-size:0.9rem; margin-top:5px;">Install on your device to unlock all predictions and live tips.</p>
 </section>
 
@@ -130,8 +106,15 @@
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
 
-// --- TEAM LOGOS ---
-const teamLogos = {}; 
+// ---------------- Persist userId ----------------
+let userId = localStorage.getItem('ppUserId');
+if (!userId) {
+  userId = crypto.randomUUID();
+  localStorage.setItem('ppUserId', userId);
+}
+
+// ---------------- Team logos ----------------
+const teamLogos = {};
 function getTeamLogo(teamName){
   if(!teamLogos[teamName]){
     teamLogos[teamName] = `/logos/${teamName}.png`;
@@ -139,7 +122,7 @@ function getTeamLogo(teamName){
   return teamLogos[teamName];
 }
 
-// --- COUNTDOWN ---
+// ---------------- Countdown ----------------
 function getCountdown(date){
   const matchTime = new Date(date);
   const now = new Date();
@@ -151,7 +134,7 @@ function getCountdown(date){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// --- FETCH MATCHES ---
+// ---------------- Fetch matches ----------------
 async function fetchMatches(){
   const res = await fetch("/admin/fixtures");
   const data = await res.json();
@@ -173,7 +156,7 @@ async function fetchMatches(){
   });
 }
 
-// --- FETCH PREDICTIONS ---
+// ---------------- Fetch predictions ----------------
 async function fetchPredictions(){
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -192,21 +175,23 @@ async function fetchPredictions(){
   });
 }
 
-// --- CLICK TRACKING ---
+// ---------------- Track clicks ----------------
 async function trackClick(type){
-  await fetch("/api/clicks", {
-    method:"POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type, userId: crypto.randomUUID() })
-  });
+  try{
+    const res = await fetch("/api/clicks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type })
+    });
+    const data = await res.json();
+    console.log(type, 'click count:', data.count);
+  } catch(err){ console.error(err); }
 }
 
-// Track homepage visit
-window.addEventListener("load", () => trackClick("homepage"));
-// Track download button
-document.getElementById("downloadBtn").addEventListener("click", () => trackClick("download"));
+// Attach click event
+document.getElementById('downloadButton').addEventListener('click', ()=> trackClick('download'));
 
-// --- INITIAL LOAD ---
+// ---------------- Initial load ----------------
 fetchMatches();
 fetchPredictions();
 setInterval(fetchMatches, 60000);

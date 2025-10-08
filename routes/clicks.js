@@ -3,54 +3,45 @@ import Click from "../models/Click.js";
 
 const router = express.Router();
 
-// Track a click
+// POST /api/clicks
 router.post("/", async (req, res) => {
   try {
-    const { userId, type } = req.body; // type = 'homepage' or 'download'
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const { userId, type } = req.body;
+    const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
 
-    // Find today's click of this type
-    let click = await Click.findOne({ type, date: today });
+    let clickDoc = await Click.findOne({ type, date: today });
 
-    if (!click) {
-      // No document for today, create it
-      click = new Click({
-        type,
-        date: today,
-        users: [userId],
-        count: 1
-      });
-      await click.save();
-    } else {
-      // Only add if user hasn't clicked yet
-      if (!click.users.includes(userId)) {
-        click.users.push(userId);
-        click.count += 1;
-        await click.save();
-      } // else: do nothing, user already clicked today
+    if (!clickDoc) {
+      // Create new document for today if doesn't exist
+      clickDoc = new Click({ type, date: today, users: [] });
     }
 
-    res.json({ success: true, count: click.count });
+    if (!clickDoc.users.includes(userId)) {
+      clickDoc.users.push(userId); // only count if user hasn't clicked yet
+      await clickDoc.save();
+    }
+
+    // Return total count
+    res.json({ count: clickDoc.users.length });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// Get today's counts
+// GET /api/clicks?type=homepage
 router.get("/", async (req, res) => {
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    const homepageClick = await Click.findOne({ type: "homepage", date: today });
-    const downloadClick = await Click.findOne({ type: "download", date: today });
+    const type = req.query.type;
+    const today = new Date().toISOString().slice(0,10);
 
-    res.json({
-      homepageClicks: homepageClick ? homepageClick.count : 0,
-      downloadClicks: downloadClick ? downloadClick.count : 0
-    });
+    const clickDoc = await Click.findOne({ type, date: today });
+    res.json({ count: clickDoc ? clickDoc.users.length : 0 });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ homepageClicks: 0, downloadClicks: 0 });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
