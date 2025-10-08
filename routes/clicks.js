@@ -1,50 +1,40 @@
+// routes/clicks.js
 import express from "express";
 import Click from "../models/Click.js";
-import UserClick from "../models/UserClick.js";
 
 const router = express.Router();
 
-const getToday = () => new Date().toISOString().split("T")[0];
-
-// Record a click
+// Add click (unique per user per day)
 router.post("/", async (req, res) => {
   try {
-    const { type, userId } = req.body;
-    if (!type || !userId) return res.status(400).json({ error: "Missing type or userId" });
+    const { userId, type } = req.body;
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-    const today = getToday();
+    // Check if user already clicked today
+    const existing = await Click.findOne({ userId, type, date: today });
+    if (existing) return res.status(200).json({ message: "Already counted today" });
 
-    const existing = await UserClick.findOne({ userId, type, date: today });
-    if (existing) return res.json({ success: true, message: "Already counted today" });
+    // Save click
+    const click = new Click({ userId, type, date: today });
+    await click.save();
 
-    await UserClick.create({ userId, type, date: today });
-
-    const click = await Click.findOneAndUpdate(
-      { type, date: today },
-      { $inc: { count: 1 } },
-      { upsert: true, new: true }
-    );
-
-    res.json({ success: true, click });
+    res.json({ success: true, message: "Click counted" });
   } catch (err) {
-    console.error("Error recording click:", err);
-    res.status(500).json({ error: "Server error" });
+    console.log(err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Get clicks summary
+// Get click counts (today)
 router.get("/", async (req, res) => {
   try {
-    const today = getToday();
-    const clicks = await Click.find({ date: today }).lean();
-
-    const summary = {};
-    clicks.forEach(c => summary[c.type] = c.count);
-
-    res.json(summary);
+    const today = new Date().toISOString().split("T")[0];
+    const homepageClicks = await Click.countDocuments({ type: "homepage", date: today });
+    const downloadClicks = await Click.countDocuments({ type: "download", date: today });
+    res.json({ homepageClicks, downloadClicks });
   } catch (err) {
-    console.error("Error fetching clicks:", err);
-    res.status(500).json({ error: "Server error" });
+    console.log(err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

@@ -1,9 +1,10 @@
+// models/Click.js
 import mongoose from "mongoose";
 
 const clickSchema = new mongoose.Schema({
-  type: { type: String, enum: ["homepage", "download"], required: true },
   userId: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+  type: { type: String, enum: ["homepage", "download"], required: true },
+  date: { type: String, required: true } // store date as YYYY-MM-DD
 });
 
 export default mongoose.model("Click", clickSchema);
