@@ -22,57 +22,55 @@
     z-index: -1;
   }
 
- /* Floating Glassy Social Buttons */
-.social-buttons {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1000;
-}
+  /* Floating Glassy Social Buttons */
+  .social-buttons {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+  }
 
-.social-buttons a {
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 1.4rem;
-  text-decoration: none;
-  backdrop-filter: blur(6px);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  transition: all 0.3s ease;
-  box-shadow: 0 0 12px rgba(255,255,255,0.15);
-}
+  .social-buttons a {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.4rem;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 12px rgba(255,255,255,0.15);
+  }
 
-.social-buttons a:hover {
-  transform: scale(1.1);
-  background: rgba(255,255,255,0.15);
-}
+  .social-buttons a:hover {
+    transform: scale(1.1);
+    background: rgba(255,255,255,0.15);
+  }
 
-.facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
-.whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
-.telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
-.gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
+  .facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
+  .whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
+  .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
+  .gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
 
-.social-buttons a span {
-  display: none;
-}
-.social-buttons a:hover span {
-  display: inline-block;
-  position: absolute;
-  left: 60px;
-  background: rgba(0,0,0,0.75);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
+  .social-buttons a span { display: none; }
+  .social-buttons a:hover span {
+    display: inline-block;
+    position: absolute;
+    left: 60px;
+    background: rgba(0,0,0,0.75);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
 
   /* Existing styles */
   .hero { text-align:center; padding:50px 20px 20px; }
@@ -96,7 +94,7 @@
     text-align:center;
     position:relative;
     transition: transform 0.3s;
-    box-shadow: 0 0 15px rgba(0,255,0,0.3); /* soft green glow */
+    box-shadow: 0 0 15px rgba(0,255,0,0.3);
   }
   .won-badge {
     position: absolute;
@@ -238,6 +236,39 @@ setInterval(()=>{
     }
   });
 },1000);
+
+// ---------------- CLICK TRACKING ----------------
+const getUserId = () => {
+  let userId = localStorage.getItem("pp_userId");
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("pp_userId", userId);
+  }
+  return userId;
+}
+
+const trackClick = async (type) => {
+  try {
+    const userId = getUserId();
+    await fetch("/api/clicks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, userId })
+    });
+  } catch (err) { console.error("Error tracking click:", err); }
+}
+
+try { trackClick("homepage"); } catch (err) {}
+document.querySelector(".btn-success").addEventListener("click", () => trackClick("download"));
+
+document.querySelectorAll(".social-buttons a").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("facebook")) trackClick("facebook");
+    if (btn.classList.contains("whatsapp")) trackClick("whatsapp");
+    if (btn.classList.contains("telegram")) trackClick("telegram");
+    if (btn.classList.contains("gmail")) trackClick("gmail");
+  });
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

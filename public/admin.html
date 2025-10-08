@@ -9,16 +9,20 @@
   body { background: #121212; color:#fff; font-family:'Segoe UI',sans-serif; padding:20px; }
   .match-card, .prediction-card { background: rgba(0,0,0,0.75); border-radius:10px; padding:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
   img { height:40px; width:40px; object-fit:contain; }
+  .clicks-list { background: rgba(0,0,0,0.6); padding:10px; border-radius:10px; }
+  .clicks-list p { margin:0 0 5px 0; }
 </style>
 </head>
 <body>
 <h2>Admin Panel</h2>
+
 <ul class="nav nav-tabs mb-3">
   <li class="nav-item"><a class="nav-link active" id="tab-upcoming" href="#">Upcoming Matches</a></li>
   <li class="nav-item"><a class="nav-link" id="tab-predictions" href="#">Top Predictions</a></li>
   <li class="nav-item"><a class="nav-link" id="tab-clicks" href="#">Clicks</a></li>
 </ul>
 
+<!-- ---------------- Matches Section ---------------- -->
 <div id="upcomingSection">
   <h4>Upcoming Matches</h4>
   <form id="addMatchForm" class="mb-3">
@@ -32,6 +36,7 @@
   <div id="matchesContainer"></div>
 </div>
 
+<!-- ---------------- Predictions Section ---------------- -->
 <div id="predictionSection" style="display:none;">
   <h4>Top Predictions</h4>
   <form id="addPredictionForm" class="mb-3">
@@ -42,15 +47,22 @@
   <div id="predictionsContainer"></div>
 </div>
 
+<!-- ---------------- Clicks Section ---------------- -->
 <div id="clickSection" style="display:none;">
-  <h4>Today’s Clicks</h4>
-  <p>Homepage clicks: <span id="homepageClicks">0</span></p>
-  <p>Download clicks: <span id="downloadClicks">0</span></p>
-  <button class="btn btn-info btn-sm" id="refreshClicks">Refresh</button>
+  <h4>Click Tracking</h4>
+  <div class="clicks-list">
+    <p>Homepage clicks: <span id="homepageClicks">0</span></p>
+    <p>Download clicks: <span id="downloadClicks">0</span></p>
+    <p>Facebook clicks: <span id="facebookClicks">0</span></p>
+    <p>WhatsApp clicks: <span id="whatsappClicks">0</span></p>
+    <p>Telegram clicks: <span id="telegramClicks">0</span></p>
+    <p>Gmail clicks: <span id="gmailClicks">0</span></p>
+  </div>
+  <button class="btn btn-info btn-sm mt-2" id="refreshClicks">Refresh</button>
 </div>
 
 <script>
-// Tab toggling
+// ---------------- Tab Toggling ----------------
 const tabUpcoming = document.getElementById("tab-upcoming");
 const tabPredictions = document.getElementById("tab-predictions");
 const tabClicks = document.getElementById("tab-clicks");
@@ -58,11 +70,37 @@ const upcomingSection = document.getElementById("upcomingSection");
 const predictionSection = document.getElementById("predictionSection");
 const clickSection = document.getElementById("clickSection");
 
-tabUpcoming.addEventListener("click",()=>{ upcomingSection.style.display="block"; predictionSection.style.display="none"; clickSection.style.display="none"; tabUpcoming.classList.add("active"); tabPredictions.classList.remove("active"); tabClicks.classList.remove("active"); loadMatches(); });
-tabPredictions.addEventListener("click",()=>{ upcomingSection.style.display="none"; predictionSection.style.display="block"; clickSection.style.display="none"; tabUpcoming.classList.remove("active"); tabPredictions.classList.add("active"); tabClicks.classList.remove("active"); loadPredictions(); });
-tabClicks.addEventListener("click",()=>{ upcomingSection.style.display="none"; predictionSection.style.display="none"; clickSection.style.display="block"; tabUpcoming.classList.remove("active"); tabPredictions.classList.remove("active"); tabClicks.classList.add("active"); loadClicks(); });
+tabUpcoming.addEventListener("click",()=>{
+  upcomingSection.style.display="block";
+  predictionSection.style.display="none";
+  clickSection.style.display="none";
+  tabUpcoming.classList.add("active");
+  tabPredictions.classList.remove("active");
+  tabClicks.classList.remove("active");
+  loadMatches();
+});
 
-// ---------------- MATCHES ----------------
+tabPredictions.addEventListener("click",()=>{
+  upcomingSection.style.display="none";
+  predictionSection.style.display="block";
+  clickSection.style.display="none";
+  tabUpcoming.classList.remove("active");
+  tabPredictions.classList.add("active");
+  tabClicks.classList.remove("active");
+  loadPredictions();
+});
+
+tabClicks.addEventListener("click",()=>{
+  upcomingSection.style.display="none";
+  predictionSection.style.display="none";
+  clickSection.style.display="block";
+  tabUpcoming.classList.remove("active");
+  tabPredictions.classList.remove("active");
+  tabClicks.classList.add("active");
+  loadClicks();
+});
+
+// ---------------- Matches ----------------
 const matchesContainer = document.getElementById("matchesContainer");
 const addMatchForm = document.getElementById("addMatchForm");
 
@@ -81,24 +119,28 @@ async function loadMatches(){
     matchesContainer.appendChild(div);
   });
 
-  document.querySelectorAll(".delete").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const id = btn.dataset.id;
-    await fetch("/admin/fixture",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({_id:id})});
-    loadMatches();
-  }));
-
-  document.querySelectorAll(".edit").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const id = btn.dataset.id;
-    const homeTeam = prompt("Edit Home Team");
-    const awayTeam = prompt("Edit Away Team");
-    const date = prompt("Edit Date YYYY-MM-DD");
-    const time = prompt("Edit Time HH:MM");
-    const leagueId = prompt("Edit League ID");
-    if(homeTeam && awayTeam && date && time){
-      await fetch("/admin/fixture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ _id:id, homeTeam, awayTeam, date, time, leagueId })});
+  document.querySelectorAll(".delete").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.dataset.id;
+      await fetch("/admin/fixture",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({_id:id})});
       loadMatches();
-    }
-  }));
+    });
+  });
+
+  document.querySelectorAll(".edit").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.dataset.id;
+      const homeTeam = prompt("Edit Home Team");
+      const awayTeam = prompt("Edit Away Team");
+      const date = prompt("Edit Date YYYY-MM-DD");
+      const time = prompt("Edit Time HH:MM");
+      const leagueId = prompt("Edit League ID");
+      if(homeTeam && awayTeam && date && time){
+        await fetch("/admin/fixture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ _id:id, homeTeam, awayTeam, date, time, leagueId })});
+        loadMatches();
+      }
+    });
+  });
 }
 
 addMatchForm.addEventListener("submit", async e=>{
@@ -113,7 +155,7 @@ addMatchForm.addEventListener("submit", async e=>{
   loadMatches();
 });
 
-// ---------------- PREDICTIONS ----------------
+// ---------------- Predictions ----------------
 const predictionsContainer = document.getElementById("predictionsContainer");
 const addPredictionForm = document.getElementById("addPredictionForm");
 
@@ -132,21 +174,25 @@ async function loadPredictions(){
     predictionsContainer.appendChild(div);
   });
 
-  document.querySelectorAll(".deletePred").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const id = btn.dataset.id;
-    await fetch("/admin/prediction",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({_id:id})});
-    loadPredictions();
-  }));
-
-  document.querySelectorAll(".editPred").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const id = btn.dataset.id;
-    const homeTeam = prompt("Edit Home Team");
-    const awayTeam = prompt("Edit Away Team");
-    if(homeTeam && awayTeam){
-      await fetch("/admin/prediction",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ _id:id, homeTeam, awayTeam })});
+  document.querySelectorAll(".deletePred").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.dataset.id;
+      await fetch("/admin/prediction",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({_id:id})});
       loadPredictions();
-    }
-  }));
+    });
+  });
+
+  document.querySelectorAll(".editPred").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.dataset.id;
+      const homeTeam = prompt("Edit Home Team");
+      const awayTeam = prompt("Edit Away Team");
+      if(homeTeam && awayTeam){
+        await fetch("/admin/prediction",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ _id:id, homeTeam, awayTeam })});
+        loadPredictions();
+      }
+    });
+  });
 }
 
 addPredictionForm.addEventListener("submit", async e=>{
@@ -158,9 +204,13 @@ addPredictionForm.addEventListener("submit", async e=>{
   loadPredictions();
 });
 
-// ---------------- CLICKS ----------------
+// ---------------- Clicks ----------------
 const homepageClicks = document.getElementById("homepageClicks");
 const downloadClicks = document.getElementById("downloadClicks");
+const facebookClicks = document.getElementById("facebookClicks");
+const whatsappClicks = document.getElementById("whatsappClicks");
+const telegramClicks = document.getElementById("telegramClicks");
+const gmailClicks = document.getElementById("gmailClicks");
 const refreshClicks = document.getElementById("refreshClicks");
 
 async function loadClicks(){
@@ -168,6 +218,10 @@ async function loadClicks(){
   const data = await res.json();
   homepageClicks.innerText = data.homepageClicks || 0;
   downloadClicks.innerText = data.downloadClicks || 0;
+  facebookClicks.innerText = data.facebook || 0;
+  whatsappClicks.innerText = data.whatsapp || 0;
+  telegramClicks.innerText = data.telegram || 0;
+  gmailClicks.innerText = data.gmail || 0;
 }
 refreshClicks.addEventListener("click", loadClicks);
 
@@ -176,6 +230,7 @@ loadMatches();
 loadPredictions();
 loadClicks();
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import Fixture from "./models/Fixture.js";
 import Prediction from "./models/Prediction.js";
 import Click from "./models/Click.js";
+import clicksRouter from "./routes/clicks.js";
 
 dotenv.config();
 
@@ -77,28 +78,14 @@ app.delete("/admin/prediction", async (req, res) => {
 });
 
 // ---------------- CLICK TRACKING ----------------
-app.post("/api/click/homepage", async (req, res) => {
-  const today = new Date().toISOString().split("T")[0];
-  let clicks = await Click.findOne({ date: today });
-  if (!clicks) clicks = new Click({ date: today });
-  clicks.homepageClicks += 1;
-  await clicks.save();
-  res.json({ success: true });
-});
-
-app.post("/api/click/download", async (req, res) => {
-  const today = new Date().toISOString().split("T")[0];
-  let clicks = await Click.findOne({ date: today });
-  if (!clicks) clicks = new Click({ date: today });
-  clicks.downloadClicks += 1;
-  await clicks.save();
-  res.json({ success: true });
-});
+app.use("/api/clicks", clicksRouter); // ✅ Daily unique + global click tracking
 
 app.get("/admin/clicks", async (req, res) => {
   const today = new Date().toISOString().split("T")[0];
-  const clicks = await Click.findOne({ date: today });
-  res.json(clicks || { homepageClicks: 0, downloadClicks: 0 });
+  const clicks = await Click.find({ date: today }).lean();
+  const result = { homepageClicks: 0, downloadClicks: 0, facebook: 0, whatsapp: 0, telegram: 0, gmail: 0 };
+  clicks.forEach(c => { result[c.type] = c.count; });
+  res.json(result);
 });
 
 // ---------------- FRONTEND ROUTES ----------------

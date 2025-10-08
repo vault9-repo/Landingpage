@@ -5,7 +5,7 @@ const fixtureSchema = new mongoose.Schema({
   time: String,
   homeTeam: String,
   awayTeam: String,
-  leagueId: String,
+  leagueId: String
 });
 
 export default mongoose.model("Fixture", fixtureSchema);
