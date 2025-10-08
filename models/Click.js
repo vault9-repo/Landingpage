@@ -1,10 +1,12 @@
-// models/Click.js
 import mongoose from "mongoose";
 
 const clickSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  type: { type: String, enum: ["homepage", "download"], required: true },
-  date: { type: String, required: true } // store date as YYYY-MM-DD
+  type: { type: String, required: true }, // homepage or download
+  date: { type: String, required: true }, // YYYY-MM-DD
+  count: { type: Number, default: 0 },
+  users: { type: [String], default: [] } // store userIds
 });
+
+clickSchema.index({ type: 1, date: 1 }, { unique: true }); // keeps unique per type/date
 
 export default mongoose.model("Click", clickSchema);
