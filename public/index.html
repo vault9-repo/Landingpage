@@ -135,7 +135,7 @@
   <p style="font-size:1.2rem; font-weight:bold; color:#ffd700;">
     Download our app to access <span style="color:#0d6efd;">Experts Free & Premium Surebets</span> instantly!
   </p>
-  <a href="https://median.co/share/rdejjdb#apk" target="_blank" id="downloadBtn" class="btn btn-success">
+  <a href="https://median.co/share/rdejjdb#apk" target="_blank" class="btn btn-success" id="downloadBtn">
     Download APK Now
   </a>
   <p style="font-size:0.9rem; margin-top:5px;">Install on your device to unlock all predictions and live tips.</p>
@@ -161,8 +161,8 @@
 <script>
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
+const downloadBtn = document.getElementById('downloadBtn');
 
-// ---------------- TEAM LOGOS -----------------
 const teamLogos = {}; 
 function getTeamLogo(teamName){
   if(!teamLogos[teamName]){
@@ -171,7 +171,6 @@ function getTeamLogo(teamName){
   return teamLogos[teamName];
 }
 
-// ---------------- COUNTDOWN -----------------
 function getCountdown(date){
   const matchTime = new Date(date);
   const now = new Date();
@@ -183,7 +182,6 @@ function getCountdown(date){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// ---------------- FETCH MATCHES -----------------
 async function fetchMatches(){
   const res = await fetch("/admin/fixtures");
   const data = await res.json();
@@ -205,7 +203,6 @@ async function fetchMatches(){
   });
 }
 
-// ---------------- FETCH PREDICTIONS -----------------
 async function fetchPredictions(){
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -224,39 +221,41 @@ async function fetchPredictions(){
   });
 }
 
-// ---------------- CLICK TRACKING -----------------
-window.addEventListener('load', async ()=>{
-  try{
-    const userId = localStorage.getItem('pp_user_id') || crypto.randomUUID();
-    localStorage.setItem('pp_user_id', userId);
+// ✅ Homepage and download clicks logic
+function getUserId() {
+  let id = localStorage.getItem('userId');
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem('userId', id);
+  }
+  return id;
+}
 
-    const today = new Date().toISOString().split('T')[0];
+function sendClick(type){
+  const userId = getUserId();
+  fetch('/api/clicks', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({userId, type})
+  })
+  .then(res => res.json())
+  .then(data => console.log(`${type} clicks:`, data.count))
+  .catch(err => console.error(err));
+}
 
-    // HOMEPAGE CLICK (once per day)
-    const lastHomeClick = localStorage.getItem('pp_home_click_date');
-    if(lastHomeClick !== today){
-      await fetch('/api/clicks', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ type:'homepage', userId })
-      });
-      localStorage.setItem('pp_home_click_date', today);
+// Attach to homepage clicks
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Example: track homepage click anywhere you want
+  document.body.addEventListener('click', (e)=>{
+    if(e.target.closest('#homepageTrack')){ // add id="homepageTrack" to homepage button if exists
+      sendClick('homepage');
     }
+  });
 
-    // DOWNLOAD BUTTON CLICK
-    const downloadBtn = document.getElementById('downloadBtn');
-    downloadBtn.addEventListener('click', async ()=>{
-      await fetch('/api/clicks', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ type:'download', userId })
-      });
-    });
-
-  }catch(e){ console.error(e); }
+  // Download button click
+  downloadBtn.addEventListener('click', ()=>sendClick('download'));
 });
 
-// ---------------- INITIAL FETCH -----------------
 fetchMatches();
 fetchPredictions();
 setInterval(fetchMatches, 60000);
