@@ -1,40 +1,57 @@
-// routes/clicks.js
 import express from "express";
-import Click from "../models/Click.js";
-
+import Click from "../models/Click.js"; // your click model
 const router = express.Router();
 
-// Add click (unique per user per day)
+// Track a click
 router.post("/", async (req, res) => {
   try {
-    const { userId, type } = req.body;
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const { userId, type } = req.body; // type = 'homepage' or 'download'
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-    // Check if user already clicked today
-    const existing = await Click.findOne({ userId, type, date: today });
-    if (existing) return res.status(200).json({ message: "Already counted today" });
+    // Find today's click of this type
+    let click = await Click.findOne({ type, date: today });
 
-    // Save click
-    const click = new Click({ userId, type, date: today });
-    await click.save();
+    if (!click) {
+      // No document for today, create it with this user
+      click = new Click({
+        type,
+        date: today,
+        users: [userId],
+        count: 1
+      });
+      await click.save();
+    } else {
+      // Check if user already clicked today
+      if (!click.users.includes(userId)) {
+        click.users.push(userId);
+        click.count += 1;
+        await click.save();
+      } else {
+        // user already clicked today, do nothing
+      }
+    }
 
-    res.json({ success: true, message: "Click counted" });
+    res.json({ success: true, count: click.count });
   } catch (err) {
     console.log(err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Get click counts (today)
+// Get today's counts
 router.get("/", async (req, res) => {
   try {
-    const today = new Date().toISOString().split("T")[0];
-    const homepageClicks = await Click.countDocuments({ type: "homepage", date: today });
-    const downloadClicks = await Click.countDocuments({ type: "download", date: today });
-    res.json({ homepageClicks, downloadClicks });
+    const today = new Date().toISOString().slice(0, 10);
+    const homepageClick = await Click.findOne({ type: "homepage", date: today });
+    const downloadClick = await Click.findOne({ type: "download", date: today });
+
+    res.json({
+      homepageClicks: homepageClick ? homepageClick.count : 0,
+      downloadClicks: downloadClick ? downloadClick.count : 0
+    });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ homepageClicks: 0, downloadClicks: 0 });
   }
 });
 
