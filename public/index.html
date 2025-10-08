@@ -32,7 +32,6 @@
     gap: 12px;
     z-index: 1000;
   }
-
   .social-buttons a {
     width: 45px;
     height: 45px;
@@ -49,18 +48,17 @@
     transition: all 0.3s ease;
     box-shadow: 0 0 12px rgba(255,255,255,0.15);
   }
-
   .social-buttons a:hover {
     transform: scale(1.1);
     background: rgba(255,255,255,0.15);
   }
-
   .facebook  { color: #1877f2; text-shadow: 0 0 8px rgba(24,119,242,0.7); }
   .whatsapp  { color: #25d366; text-shadow: 0 0 8px rgba(37,211,102,0.7); }
   .telegram  { color: #708090; text-shadow: 0 0 8px rgba(112,128,144,0.7); }
   .gmail     { color: #ff4c68; text-shadow: 0 0 8px rgba(255,76,104,0.7); }
-
-  .social-buttons a span { display: none; }
+  .social-buttons a span {
+    display: none;
+  }
   .social-buttons a:hover span {
     display: inline-block;
     position: absolute;
@@ -72,13 +70,15 @@
     white-space: nowrap;
   }
 
-  /* Existing styles */
+  /* Hero Section */
   .hero { text-align:center; padding:50px 20px 20px; }
   .hero h1 { font-size:3rem; font-weight:bold; }
   .hero p { font-size:1.2rem; margin:10px 0; }
   .btn-success { font-size:1.3rem; padding:15px 40px; margin-top:10px; transition: all 0.3s; }
   .btn-success:hover { transform: scale(1.05); box-shadow: 0 0 15px #28a745; }
   .center-logo img { max-width:150px; width:100%; height:auto; border-radius:50%; box-shadow:0 8px 25px rgba(0,0,0,0.4); margin:2rem auto; display:block; }
+
+  /* Dashboard & Matches */
   .dashboard { display:flex; flex-wrap:wrap; gap:20px; margin-bottom:2rem; }
   .upcoming-matches { flex:1; min-width:300px; max-height:600px; overflow-y:auto; }
   .match-card { background: rgba(0,0,0,0.75); border-radius:12px; padding:15px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; transition:transform 0.2s; }
@@ -86,6 +86,8 @@
   .team-logo { height:40px; width:40px; object-fit:contain; }
   .match-info { flex:1; margin:0 10px; text-align:center; }
   .countdown { font-weight:bold; color:#0d6efd; }
+
+  /* Predictions Grid */
   .predictions-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px; margin-bottom:2rem; }
   .prediction-card {
     background: rgba(0,0,0,0.75);
@@ -108,12 +110,13 @@
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
+
   footer { text-align:center; padding:20px; background:rgba(0,0,0,0.8); }
 </style>
 </head>
 <body>
 
-<!-- ✅ Floating Social Buttons -->
+<!-- Floating Social Buttons -->
 <div class="social-buttons">
   <a href="#" target="_blank" class="facebook"><i class="bi bi-facebook"></i><span>Facebook</span></a>
   <a href="#" target="_blank" class="whatsapp"><i class="bi bi-whatsapp"></i><span>WhatsApp</span></a>
@@ -160,12 +163,9 @@
 const upcomingContainer = document.getElementById('upcomingContainer');
 const predictionsContainer = document.getElementById('predictionsContainer');
 
-const teamLogos = {}; 
+const teamLogos = {};
 function getTeamLogo(teamName){
-  if(!teamLogos[teamName]){
-    teamLogos[teamName] = `/logos/${teamName}.png`;
-  }
-  return teamLogos[teamName];
+  return `/logos/${teamName}.png`; // served from /public/logos/
 }
 
 function getCountdown(date){
@@ -236,39 +236,6 @@ setInterval(()=>{
     }
   });
 },1000);
-
-// ---------------- CLICK TRACKING ----------------
-const getUserId = () => {
-  let userId = localStorage.getItem("pp_userId");
-  if (!userId) {
-    userId = crypto.randomUUID();
-    localStorage.setItem("pp_userId", userId);
-  }
-  return userId;
-}
-
-const trackClick = async (type) => {
-  try {
-    const userId = getUserId();
-    await fetch("/api/clicks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, userId })
-    });
-  } catch (err) { console.error("Error tracking click:", err); }
-}
-
-try { trackClick("homepage"); } catch (err) {}
-document.querySelector(".btn-success").addEventListener("click", () => trackClick("download"));
-
-document.querySelectorAll(".social-buttons a").forEach(btn => {
-  btn.addEventListener("click", () => {
-    if (btn.classList.contains("facebook")) trackClick("facebook");
-    if (btn.classList.contains("whatsapp")) trackClick("whatsapp");
-    if (btn.classList.contains("telegram")) trackClick("telegram");
-    if (btn.classList.contains("gmail")) trackClick("gmail");
-  });
-});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

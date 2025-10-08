@@ -6,24 +6,44 @@ const router = express.Router();
 
 const getToday = () => new Date().toISOString().split("T")[0];
 
+// Record a click
 router.post("/", async (req, res) => {
   try {
     const { type, userId } = req.body;
     if (!type || !userId) return res.status(400).json({ error: "Missing type or userId" });
 
     const today = getToday();
+
     const existing = await UserClick.findOne({ userId, type, date: today });
     if (existing) return res.json({ success: true, message: "Already counted today" });
 
     await UserClick.create({ userId, type, date: today });
+
     const click = await Click.findOneAndUpdate(
       { type, date: today },
       { $inc: { count: 1 } },
       { upsert: true, new: true }
     );
+
     res.json({ success: true, click });
   } catch (err) {
     console.error("Error recording click:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get clicks summary
+router.get("/", async (req, res) => {
+  try {
+    const today = getToday();
+    const clicks = await Click.find({ date: today }).lean();
+
+    const summary = {};
+    clicks.forEach(c => summary[c.type] = c.count);
+
+    res.json(summary);
+  } catch (err) {
+    console.error("Error fetching clicks:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
