@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
 
 const clickSchema = new mongoose.Schema({
-  type: { type: String, required: true }, // homepage, download, facebook, whatsapp, telegram, gmail
   date: { type: String, required: true },
-  count: { type: Number, default: 0 },
+  homepage: { type: Number, default: 0 },
+  download: { type: Number, default: 0 },
+  facebook: { type: Number, default: 0 },
+  whatsapp: { type: Number, default: 0 },
+  telegram: { type: Number, default: 0 },
+  gmail: { type: Number, default: 0 },
+  users: [{ userId: String, type: String }] // track users to avoid duplicate clicks
 });
-
-clickSchema.index({ type: 1, date: 1 }, { unique: true });
 
 export default mongoose.model("Click", clickSchema);
