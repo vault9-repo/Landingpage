@@ -19,7 +19,6 @@
   <li class="nav-item"><a class="nav-link" id="tab-clicks" href="#">Clicks</a></li>
 </ul>
 
-<!-- Upcoming Matches -->
 <div id="upcomingSection">
   <h4>Upcoming Matches</h4>
   <form id="addMatchForm" class="mb-3">
@@ -33,7 +32,6 @@
   <div id="matchesContainer"></div>
 </div>
 
-<!-- Predictions -->
 <div id="predictionSection" style="display:none;">
   <h4>Top Predictions</h4>
   <form id="addPredictionForm" class="mb-3">
@@ -44,7 +42,6 @@
   <div id="predictionsContainer"></div>
 </div>
 
-<!-- Clicks -->
 <div id="clickSection" style="display:none;">
   <h4>Today’s Clicks</h4>
   <p>Homepage clicks: <span id="homepageClicks">0</span></p>
@@ -53,7 +50,7 @@
 </div>
 
 <script>
-// Tabs toggling
+// Tab toggling
 const tabUpcoming = document.getElementById("tab-upcoming");
 const tabPredictions = document.getElementById("tab-predictions");
 const tabClicks = document.getElementById("tab-clicks");
@@ -166,15 +163,16 @@ const homepageClicks = document.getElementById("homepageClicks");
 const downloadClicks = document.getElementById("downloadClicks");
 const refreshClicks = document.getElementById("refreshClicks");
 
-async function loadClicks(){
+async function loadClicks() {
   try {
-    const res = await fetch("/api/clicks");
-    const data = await res.json();
-    const homepage = data.filter(c => c.type === "homepage").length;
-    const download = data.filter(c => c.type === "download").length;
-    homepageClicks.innerText = homepage;
-    downloadClicks.innerText = download;
-  } catch(err){
+    const homeRes = await fetch("/api/clicks?type=homepage");
+    const homeData = await homeRes.json();
+    homepageClicks.innerText = homeData.count;
+
+    const downloadRes = await fetch("/api/clicks?type=download");
+    const downloadData = await downloadRes.json();
+    downloadClicks.innerText = downloadData.count;
+  } catch (err) {
     console.error("Error fetching clicks:", err);
     homepageClicks.innerText = "Error";
     downloadClicks.innerText = "Error";
