@@ -244,11 +244,76 @@ async function fetchMatches(){
   });
 }
 
-async function fetchPredictions(){
+// --- Fullscreen Popup Overlay ---
+const popup = document.createElement("div");
+popup.id = "imagePopup";
+popup.style.cssText = `
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.9); z-index:9999; justify-content:center;
+  align-items:center; flex-direction:column;
+`;
+popup.innerHTML = `
+  <div id="pageSpinner" style="
+    border:6px solid rgba(255,255,255,0.3);
+    border-top:6px solid #0d6efd;
+    border-radius:50%;
+    width:60px; height:60px;
+    animation:spin 1s linear infinite;
+    margin-bottom:20px;
+  "></div>
+  <img id="popupImage" src="" alt="Top Image" style="
+    max-width:90%; max-height:85%;
+    border-radius:12px; display:none;
+  ">
+`;
+document.body.appendChild(popup);
+
+const popupImg = document.getElementById('popupImage');
+const pageSpinner = document.getElementById('pageSpinner');
+
+function openImagePopup(imgSrc){
+  popup.style.display = "flex";
+  popupImg.style.display = "none";
+  pageSpinner.style.display = "block";
+
+  // --- Always show spinner for 3 seconds before showing the image ---
+  popupImg.src = imgSrc;
+  const startTime = Date.now();
+
+  popupImg.onload = () => {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(3000 - elapsed, 0); // force 3s spinner
+    setTimeout(() => {
+      pageSpinner.style.display = "none";
+      popupImg.style.display = "block";
+    }, remaining);
+  };
+
+  history.pushState({ popupOpen: true }, "");
+}
+
+function closeImagePopup(){
+  popup.style.display = "none";
+  popupImg.src = "";
+  if (history.state && history.state.popupOpen) {
+    history.back();
+  }
+}
+
+popup.addEventListener("click", e=>{
+  if(e.target === popup) closeImagePopup();
+});
+window.addEventListener("popstate", () => closeImagePopup());
+
+// --- Enhanced fetchPredictions with full popup ---
+async function fetchPredictions() {
   const res = await fetch("/admin/predictions");
   const data = await res.json();
   predictionsContainer.innerHTML = "";
-  data.forEach(f=>{
+
+  const topImages = ["top1.PNG", "top2.PNG", "top3.PNG", "top4.PNG"];
+
+  data.forEach((f, index) => {
     const div = document.createElement('div');
     div.classList.add('prediction-card');
     div.innerHTML = `
@@ -258,10 +323,25 @@ async function fetchPredictions(){
       <strong>${f.awayTeam}</strong><br/>
       <img src="${getTeamLogo(f.awayTeam)}" class="team-logo">
     `;
+
+    div.addEventListener("click", () => {
+      openImagePopup(topImages[index % topImages.length]);
+    });
+
     predictionsContainer.appendChild(div);
   });
 }
 
+// Spinner keyframes
+const style = document.createElement("style");
+style.textContent = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}`;
+document.head.appendChild(style);
+
+// --- Auto Refresh + Countdown Updates ---
 fetchMatches();
 fetchPredictions();
 setInterval(fetchMatches, 60000);
@@ -281,7 +361,3 @@ setInterval(()=>{
   });
 },1000);
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
