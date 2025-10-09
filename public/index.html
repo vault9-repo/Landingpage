@@ -276,9 +276,8 @@ function openImagePopup(imgSrc){
   popupImg.style.display = "none";
   pageSpinner.style.display = "block";
 
-  // --- Show spinner quickly (~0.5s) before image appears ---
   popupImg.src = imgSrc;
-  const minSpinnerTime = 500; // 0.5 seconds
+  const minSpinnerTime = 500;
 
   popupImg.onload = () => {
     setTimeout(() => {
@@ -289,7 +288,6 @@ function openImagePopup(imgSrc){
 
   history.pushState({ popupOpen: true }, "");
 }
-
 
 function closeImagePopup(){
   popup.style.display = "none";
@@ -304,7 +302,7 @@ popup.addEventListener("click", e=>{
 });
 window.addEventListener("popstate", () => closeImagePopup());
 
-// --- Enhanced fetchPredictions with full popup ---
+// --- Enhanced fetchPredictions with "moving signal" green glow ---
 async function fetchPredictions() {
   const res = await fetch("/admin/predictions");
   const data = await res.json();
@@ -315,15 +313,32 @@ async function fetchPredictions() {
   data.forEach((f, index) => {
     const div = document.createElement('div');
     div.classList.add('prediction-card');
+    div.style.position = "relative";
+
     div.innerHTML = `
       <span class="won-badge">WON</span>
       <img src="${getTeamLogo(f.homeTeam)}" class="team-logo"><br/>
       <strong>${f.homeTeam}</strong><br/>vs<br/>
       <strong>${f.awayTeam}</strong><br/>
       <img src="${getTeamLogo(f.awayTeam)}" class="team-logo">
+      <button class="view-stats-btn">VIEW STATS</button>
     `;
 
-    div.addEventListener("click", () => {
+    const btn = div.querySelector(".view-stats-btn");
+    btn.style.cssText = `
+      position:absolute; bottom:8px; right:8px;
+      background:#28a745; color:white;
+      border:none; padding:4px 8px;
+      border-radius:6px; font-size:12px;
+      cursor:pointer; transition:0.3s;
+      box-shadow:0 0 10px rgba(40,167,69,0.7);
+      animation:signalPulse 2s infinite;
+    `;
+    btn.onmouseover = () => btn.style.background = "#218838";
+    btn.onmouseout = () => btn.style.background = "#28a745";
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
       openImagePopup(topImages[index % topImages.length]);
     });
 
@@ -331,12 +346,33 @@ async function fetchPredictions() {
   });
 }
 
-// Spinner keyframes
+// Spinner + Moving Signal keyframes
 const style = document.createElement("style");
 style.textContent = `
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes signalPulse {
+  0% {
+    box-shadow: 0 0 6px rgba(40,167,69,0.4),
+                0 0 10px rgba(40,167,69,0.5),
+                0 0 14px rgba(40,167,69,0.7),
+                0 0 18px rgba(40,167,69,0.9);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(40,167,69,0.7),
+                0 0 20px rgba(40,167,69,0.9),
+                0 0 26px rgba(40,167,69,1),
+                0 0 32px rgba(40,167,69,1);
+  }
+  100% {
+    box-shadow: 0 0 6px rgba(40,167,69,0.4),
+                0 0 10px rgba(40,167,69,0.5),
+                0 0 14px rgba(40,167,69,0.7),
+                0 0 18px rgba(40,167,69,0.9);
+  }
 }`;
 document.head.appendChild(style);
 
