@@ -276,21 +276,20 @@ function openImagePopup(imgSrc){
   popupImg.style.display = "none";
   pageSpinner.style.display = "block";
 
-  // --- Always show spinner for 3 seconds before showing the image ---
+  // --- Show spinner quickly (~0.5s) before image appears ---
   popupImg.src = imgSrc;
-  const startTime = Date.now();
+  const minSpinnerTime = 500; // 0.5 seconds
 
   popupImg.onload = () => {
-    const elapsed = Date.now() - startTime;
-    const remaining = Math.max(3000 - elapsed, 0); // force 3s spinner
     setTimeout(() => {
       pageSpinner.style.display = "none";
       popupImg.style.display = "block";
-    }, remaining);
+    }, minSpinnerTime);
   };
 
   history.pushState({ popupOpen: true }, "");
 }
+
 
 function closeImagePopup(){
   popup.style.display = "none";
